@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom Social Stream Chat Overlay</title>
+
+  <style>
+    @font-face { font-family: "PeebrFont"; src: url("./fonts/Peebr.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "ZaneFont"; src: url("./fonts/Zane.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "SketchFont"; src: url("./fonts/Sketch.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "SpookyFont"; src: url("./fonts/spooky.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "RottFont"; src: url("./fonts/Rott.TTF") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "QueenieFont"; src: url("./fonts/Queenie.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "TrisFont"; src: url("./fonts/Tris.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "CursiveFont"; src: url("./fonts/Cursive.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "ComicSansFont"; src: url("./fonts/Comic_Sans.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "EmulatorFont"; src: url("./fonts/Emulator.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "RetroFont"; src: url("./fonts/Retro.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "PapyrusFont"; src: url("./fonts/Papyrus.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "RansomFont"; src: url("./fonts/Ransom.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "TypewriterFont"; src: url("./fonts/Typewriter.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "PokemonFont"; src: url("./fonts/Pokemon.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "KindergartenFont"; src: url("./fonts/Kindergarten.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "ShalFont"; src: url("./fonts/Shal.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+    @font-face { font-family: "CushFont"; src: url("./fonts/Cush.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: "Roboto", Arial, sans-serif;
+    }
+
+    #viewerBox {
+      position: absolute;
+      top: 18px;
+      right: 40px;
+      width: 560px;
+      min-height: 48px;
+      padding: 8px 14px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.58);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      z-index: 50;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .viewerItem {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1;
+      text-shadow:
+        2px 0 0 #000,
+        -2px 0 0 #000,
+        0 2px 0 #000,
+        0 -2px 0 #000,
+        0 3px 5px rgba(0, 0, 0, 0.85);
+    }
+
+    .viewerIcon {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      filter:
+        drop-shadow(2px 0 0 #000)
+        drop-shadow(-2px 0 0 #000)
+        drop-shadow(0 2px 0 #000)
+        drop-shadow(0 -2px 0 #000)
+        drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+    }
+
+    .viewerDivider {
+      width: 2px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+    }
+
+    #chat {
+      position: absolute;
+      right: 28px;
+      bottom: 0;
+      width: 572px;
+      height: 100vh;
+      padding-right: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 16px;
+      pointer-events: none;
+      overflow: hidden;
+      box-sizing: border-box;
+      z-index: 10;
+    }
+
+    .message {
+      width: 100%;
+      max-width: 560px;
+      color: white;
+      text-align: right;
+      flex: 0 0 auto;
+      animation: popIn 0.35s ease-out both;
+      transform-origin: right bottom;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .platform-icon,
+    .user-icon,
+    .badge-icon {
+      object-fit: contain;
+      flex: 0 0 auto;
+      filter:
+        drop-shadow(2px 0 0 #000)
+        drop-shadow(-2px 0 0 #000)
+        drop-shadow(0 2px 0 #000)
+        drop-shadow(0 -2px 0 #000)
+        drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+    }
+
+    .user-icon {
+      width: var(--user-icon-size, 34px);
+      height: var(--user-icon-size, 34px);
+    }
+
+    .platform-icon {
+      width: var(--platform-icon-size, 30px);
+      height: var(--platform-icon-size, 30px);
+    }
+
+    .badge-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .username {
+      display: inline-block;
+      font-size: var(--name-font-size, 30px);
+      font-weight: var(--name-weight, 900);
+      line-height: 1;
+      color: var(--username-color, #ffffff);
+      font-family: var(--name-font, "Roboto", Arial, sans-serif);
+      text-shadow:
+        3px 0 0 #000,
+        -3px 0 0 #000,
+        0 3px 0 #000,
+        0 -3px 0 #000,
+        2px 2px 0 #000,
+        -2px 2px 0 #000,
+        2px -2px 0 #000,
+        -2px -2px 0 #000,
+        0 4px 8px rgba(0, 0, 0, 0.9);
+    }
+
+    .title {
+      display: inline-block;
+      font-size: var(--title-font-size, 16px);
+      font-weight: var(--title-weight, 900);
+      line-height: 1;
+      color: var(--title-color, #ffd86b);
+      font-family: var(--title-font, var(--name-font, "Roboto", Arial, sans-serif));
+      text-transform: uppercase;
+      letter-spacing: 0.045em;
+      text-shadow:
+        2px 0 0 #000,
+        -2px 0 0 #000,
+        0 2px 0 #000,
+        0 -2px 0 #000,
+        1px 1px 0 #000,
+        -1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000,
+        0 3px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    .text {
+      width: 100%;
+      max-width: 560px;
+      font-size: var(--message-font-size, 32px);
+      line-height: 1.18;
+      font-weight: var(--message-weight, 800);
+      color: var(--message-color, #ffffff);
+      font-family: var(--message-font, "Roboto", Arial, sans-serif);
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: break-word;
+      text-align: right;
+      text-shadow:
+        3px 0 0 #000,
+        -3px 0 0 #000,
+        0 3px 0 #000,
+        0 -3px 0 #000,
+        2px 2px 0 #000,
+        -2px 2px 0 #000,
+        2px -2px 0 #000,
+        -2px -2px 0 #000,
+        0 4px 8px rgba(0, 0, 0, 0.9);
+    }
+
+    .text .emote,
+    .custom-chat-emote {
+      height: 1.25em;
+      width: auto;
+      vertical-align: -0.25em;
+      display: inline-block;
+      object-fit: contain;
+      margin: 0 0.08em;
+      filter:
+        drop-shadow(2px 0 0 #000)
+        drop-shadow(-2px 0 0 #000)
+        drop-shadow(0 2px 0 #000)
+        drop-shadow(0 -2px 0 #000)
+        drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+    }
+
+    .text .emote { max-width: 2.4em; }
+    .custom-chat-emote { max-width: 2.6em; }
+
+    #status {
+      position: absolute;
+      right: 40px;
+      bottom: 10px;
+      font-size: 16px;
+      font-weight: 900;
+      color: white;
+      opacity: 0.65;
+      z-index: 999;
+      text-align: right;
+      text-shadow:
+        2px 0 0 #000,
+        -2px 0 0 #000,
+        0 2px 0 #000,
+        0 -2px 0 #000;
+      pointer-events: none;
+    }
+
+    .fx-name-shake,
+    .fx-title-shake,
+    .fx-message-shake,
+    .msg-shake {
+      display: inline-block;
+      animation: fxShake 0.12s infinite;
+    }
+
+    .fx-name-sparkle,
+    .fx-title-sparkle,
+    .fx-message-sparkle,
+    .msg-sparkle {
+      position: relative;
+      display: inline-block;
+      overflow: visible;
+    }
+
+    .fx-name-sparkle::before,
+    .fx-title-sparkle::before,
+    .fx-message-sparkle::before,
+    .msg-sparkle::before,
+    .fx-name-sparkle::after,
+    .fx-title-sparkle::after,
+    .fx-message-sparkle::after,
+    .msg-sparkle::after {
+      position: absolute;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      color: #fff2a8;
+      font-family: Arial, sans-serif;
+      font-weight: 900;
+      filter: none;
+      text-shadow: none;
+    }
+
+    .fx-name-sparkle::before,
+    .fx-title-sparkle::before,
+    .fx-message-sparkle::before,
+    .msg-sparkle::before {
+      content: "✦  ●";
+      top: -0.75em;
+      right: -0.65em;
+      font-size: 0.55em;
+      animation: fxSparkleBitsA 1.05s infinite;
+    }
+
+    .fx-name-sparkle::after,
+    .fx-title-sparkle::after,
+    .fx-message-sparkle::after,
+    .msg-sparkle::after {
+      content: "●  ✧";
+      left: -0.55em;
+      bottom: -0.45em;
+      font-size: 0.48em;
+      animation: fxSparkleBitsB 1.25s infinite;
+    }
+
+    .fx-name-glow,
+    .fx-title-glow,
+    .fx-message-glow,
+    .msg-glow {
+      display: inline-block;
+      animation: fxRainbowGlow 1.1s infinite;
+    }
+
+    .msg-glow img,
+    .msg-glow .emote,
+    .msg-glow .custom-chat-emote {
+      animation: fxEmoteGlow 1.1s infinite;
+    }
+
+    .fx-name-rainbow,
+    .fx-title-rainbow,
+    .fx-message-rainbow,
+    .msg-rainbow {
+      display: inline-block;
+      animation: fxRainbow 1.8s linear infinite;
+    }
+
+    .fx-name-creepy,
+    .fx-title-creepy,
+    .fx-message-creepy,
+    .msg-creepy {
+      display: inline-block;
+      animation: fxCreepy 2.4s infinite;
+      letter-spacing: 0.08em;
+      font-family: "SpookyFont", var(--message-font, "Roboto", Arial, sans-serif);
+    }
+
+    .fx-name-creepy {
+      font-family: "SpookyFont", var(--name-font, "Roboto", Arial, sans-serif);
+    }
+
+    .fx-title-creepy {
+      font-family: "SpookyFont", var(--title-font, var(--name-font, "Roboto", Arial, sans-serif));
+    }
+
+    .fx-message-creepy,
+    .msg-creepy,
+    .msg-creepy span,
+    .msg-creepy .wave-char {
+      font-family: "SpookyFont", var(--message-font, "Roboto", Arial, sans-serif);
+    }
+
+    .fx-name-wave,
+    .fx-title-wave,
+    .fx-message-wave {
+      display: inline-block;
+      animation: fxWave 1.25s ease-in-out infinite;
+    }
+
+    .fx-name-flip {
+      display: inline-block;
+      transform: rotate(180deg);
+    }
+
+    .fx-name-mirror {
+      display: inline-block;
+      transform: scaleX(-1);
+    }
+
+    .fx-name-squish {
+      display: inline-block;
+      animation: fxNameSquish 0.75s infinite;
+    }
+
+    .fx-name-scroll {
+      display: inline-block;
+      max-width: 220px;
+      overflow: hidden;
+      white-space: nowrap;
+      vertical-align: bottom;
+    }
+
+    .fx-name-scroll .name-scroll-inner {
+      display: inline-block;
+      padding-left: 100%;
+      animation: fxNameScroll 3s linear infinite;
+    }
+
+    @keyframes fxNameSquish {
+      0%, 100% { transform: scaleX(1) scaleY(1); }
+      50% { transform: scaleX(0.78) scaleY(1.28); }
+    }
+
+    @keyframes fxNameScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-120%); }
+    }
+
+    .msg-wave {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .msg-wave .wave-char {
+      display: inline-block;
+      animation: fxCharWave 1.15s ease-in-out infinite;
+      animation-delay: calc(var(--i, 0) * 0.065s);
+      transform-origin: center bottom;
+    }
+
+    /*
+      IMPORTANT:
+      This makes font color, font size, underline, bold, etc. survive inside animations.
+      Without this, wrappers like [wave]!!huge!![/wave] or [blue][spin]text[/spin][/blue]
+      can lose their styles.
+    */
+    .msg-bounce,
+    .msg-spin,
+    .msg-wobble,
+    .msg-panic,
+    .msg-scroll-x,
+    .msg-scroll-y,
+    .msg-mirror,
+    .msg-flip,
+    .msg-blink,
+    .msg-ghost,
+    .msg-stretch,
+    .msg-squish,
+    .msg-jump,
+    .msg-float,
+    .msg-vibrate,
+    .msg-doom,
+    .msg-melt,
+    .msg-wave,
+    .msg-wave .wave-char,
+    .scroll-inner {
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      text-decoration: inherit;
+      text-decoration-thickness: inherit;
+      text-underline-offset: inherit;
+      text-transform: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+    }
+
+    .msg-bold { font-weight: 1000; }
+    .msg-italic { font-style: italic; }
+
+    .msg-underline {
+      text-decoration: underline;
+      text-decoration-thickness: 3px;
+      text-underline-offset: 4px;
+    }
+
+    .msg-strike {
+      text-decoration: line-through;
+      text-decoration-thickness: 3px;
+    }
+
+    .msg-tiny { font-size: 0.65em; }
+    .msg-huge { font-size: 1.35em; }
+
+    .msg-red { color: #ff4b4b; }
+    .msg-gold { color: #ffd86b; }
+    .msg-green { color: #06d6a0; }
+    .msg-blue { color: #4cc9f0; }
+    .msg-purple { color: #b388ff; }
+
+    .msg-bounce {
+      display: inline-block;
+      animation: fxBounce 0.55s infinite;
+    }
+
+    .msg-spin {
+      display: inline-block;
+      animation: fxSpin 1s linear infinite;
+    }
+
+    .msg-wobble {
+      display: inline-block;
+      animation: fxWobble 0.8s infinite;
+    }
+
+    .msg-panic {
+      display: inline-block;
+      animation: fxPanic 0.08s infinite;
+    }
+
+    .msg-scroll-x {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 100%;
+      vertical-align: -0.1em;
+    }
+
+    .msg-scroll-x .scroll-inner {
+      display: inline-block;
+      padding-inline: 0.08em;
+      animation: fxScrollX 2.8s linear infinite;
+      will-change: transform;
+    }
+
+    .msg-scroll-y {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 100%;
+      height: 1.18em;
+      line-height: 1.18em;
+      vertical-align: -0.18em;
+    }
+
+    .msg-scroll-y .scroll-inner {
+      display: inline-block;
+      animation: fxScrollY 1.7s linear infinite;
+      will-change: transform;
+    }
+
+    .msg-mirror {
+      display: inline-block;
+      transform: scaleX(-1);
+    }
+
+    .msg-flip {
+      display: inline-block;
+      transform: scaleY(-1);
+    }
+
+    .msg-blink {
+      display: inline-block;
+      animation: fxBlink 0.8s steps(2, end) infinite;
+    }
+
+    .msg-ghost {
+      display: inline-block;
+      animation: fxGhost 2s ease-in-out infinite;
+    }
+
+    .msg-stretch {
+      display: inline-block;
+      animation: fxStretch 0.75s infinite;
+    }
+
+    .msg-squish {
+      display: inline-block;
+      animation: fxSquish 0.75s infinite;
+    }
+
+    .msg-jump {
+      display: inline-block;
+      animation: fxJump 0.7s infinite;
+    }
+
+    .msg-float {
+      display: inline-block;
+      animation: fxFloat 2.1s ease-in-out infinite;
+    }
+
+    .msg-vibrate {
+      display: inline-block;
+      animation: fxVibrate 0.045s infinite;
+    }
+
+    .msg-doom {
+      display: inline-block;
+      animation: fxDoom 1.5s infinite;
+      letter-spacing: 0.12em;
+    }
+
+    .msg-melt {
+      display: inline-block;
+      animation: fxMelt 1.7s infinite;
+    }
+
+
+
+    .goblin-chat-temp {
+      filter: drop-shadow(0 0 10px rgba(57,255,20,0.9));
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes fxShake {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(1px, -1px) rotate(-0.5deg); }
+      50% { transform: translate(-1px, 1px) rotate(0.5deg); }
+      75% { transform: translate(1px, 1px) rotate(0deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    @keyframes fxSparkleBitsA {
+      0% { opacity: 0; transform: translate(0, 5px) scale(0.55) rotate(0deg); }
+      20% { opacity: 1; transform: translate(-2px, 0) scale(1.1) rotate(12deg); }
+      55% { opacity: 1; transform: translate(-6px, -5px) scale(0.9) rotate(-8deg); }
+      100% { opacity: 0; transform: translate(-9px, -10px) scale(0.45) rotate(20deg); }
+    }
+
+    @keyframes fxSparkleBitsB {
+      0% { opacity: 0; transform: translate(0, -2px) scale(0.5) rotate(0deg); }
+      28% { opacity: 1; transform: translate(3px, -6px) scale(1) rotate(-10deg); }
+      62% { opacity: 1; transform: translate(6px, -10px) scale(0.85) rotate(8deg); }
+      100% { opacity: 0; transform: translate(10px, -15px) scale(0.4) rotate(-18deg); }
+    }
+
+    @keyframes fxEmoteGlow {
+      0% {
+        filter:
+          drop-shadow(0 0 6px rgba(255, 59, 48, 0.95))
+          drop-shadow(0 0 14px rgba(255, 59, 48, 0.75))
+          drop-shadow(2px 0 0 #000)
+          drop-shadow(-2px 0 0 #000)
+          drop-shadow(0 2px 0 #000)
+          drop-shadow(0 -2px 0 #000)
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+      }
+      25% {
+        filter:
+          drop-shadow(0 0 6px rgba(255, 204, 0, 0.95))
+          drop-shadow(0 0 14px rgba(255, 204, 0, 0.75))
+          drop-shadow(2px 0 0 #000)
+          drop-shadow(-2px 0 0 #000)
+          drop-shadow(0 2px 0 #000)
+          drop-shadow(0 -2px 0 #000)
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+      }
+      50% {
+        filter:
+          drop-shadow(0 0 6px rgba(52, 199, 89, 0.95))
+          drop-shadow(0 0 14px rgba(52, 199, 89, 0.75))
+          drop-shadow(2px 0 0 #000)
+          drop-shadow(-2px 0 0 #000)
+          drop-shadow(0 2px 0 #000)
+          drop-shadow(0 -2px 0 #000)
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+      }
+      75% {
+        filter:
+          drop-shadow(0 0 6px rgba(0, 122, 255, 0.95))
+          drop-shadow(0 0 14px rgba(0, 122, 255, 0.75))
+          drop-shadow(2px 0 0 #000)
+          drop-shadow(-2px 0 0 #000)
+          drop-shadow(0 2px 0 #000)
+          drop-shadow(0 -2px 0 #000)
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+      }
+      100% {
+        filter:
+          drop-shadow(0 0 6px rgba(255, 59, 48, 0.95))
+          drop-shadow(0 0 14px rgba(255, 59, 48, 0.75))
+          drop-shadow(2px 0 0 #000)
+          drop-shadow(-2px 0 0 #000)
+          drop-shadow(0 2px 0 #000)
+          drop-shadow(0 -2px 0 #000)
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.65));
+      }
+    }
+
+    @keyframes fxRainbowGlow {
+      0% {
+        color: #ff3b30;
+        text-shadow:
+          3px 0 0 #000,
+          -3px 0 0 #000,
+          0 3px 0 #000,
+          0 -3px 0 #000,
+          0 0 14px rgba(255, 59, 48, 0.95),
+          0 0 28px rgba(255, 59, 48, 0.75);
+      }
+      25% {
+        color: #ffcc00;
+        text-shadow:
+          3px 0 0 #000,
+          -3px 0 0 #000,
+          0 3px 0 #000,
+          0 -3px 0 #000,
+          0 0 14px rgba(255, 204, 0, 0.95),
+          0 0 28px rgba(255, 204, 0, 0.75);
+      }
+      50% {
+        color: #34c759;
+        text-shadow:
+          3px 0 0 #000,
+          -3px 0 0 #000,
+          0 3px 0 #000,
+          0 -3px 0 #000,
+          0 0 14px rgba(52, 199, 89, 0.95),
+          0 0 28px rgba(52, 199, 89, 0.75);
+      }
+      75% {
+        color: #007aff;
+        text-shadow:
+          3px 0 0 #000,
+          -3px 0 0 #000,
+          0 3px 0 #000,
+          0 -3px 0 #000,
+          0 0 14px rgba(0, 122, 255, 0.95),
+          0 0 28px rgba(0, 122, 255, 0.75);
+      }
+      100% {
+        color: #ff3b30;
+        text-shadow:
+          3px 0 0 #000,
+          -3px 0 0 #000,
+          0 3px 0 #000,
+          0 -3px 0 #000,
+          0 0 14px rgba(255, 59, 48, 0.95),
+          0 0 28px rgba(255, 59, 48, 0.75);
+      }
+    }
+
+    @keyframes fxRainbow {
+      0% { color: #ff595e; }
+      20% { color: #ffca3a; }
+      40% { color: #8ac926; }
+      60% { color: #1982c4; }
+      80% { color: #b388ff; }
+      100% { color: #ff595e; }
+    }
+
+    @keyframes fxCreepy {
+      0%, 100% { transform: translateY(0) skewX(0deg); filter: blur(0); }
+      20% { transform: translateY(-1px) skewX(-2deg); filter: blur(0.2px); }
+      40% { transform: translateY(1px) skewX(2deg); filter: blur(0); }
+      60% { transform: translateY(0) skewX(-1deg); filter: blur(0.4px); }
+      80% { transform: translateY(1px) skewX(1deg); filter: blur(0); }
+    }
+
+    @keyframes fxWave {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    @keyframes fxCharWave {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-0.22em) rotate(-2deg); }
+      50% { transform: translateY(-0.42em) rotate(2deg); }
+      75% { transform: translateY(-0.18em) rotate(-1deg); }
+    }
+
+    @keyframes fxBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+
+    @keyframes fxSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fxWobble {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-3deg) scale(1.04); }
+      50% { transform: rotate(3deg) scale(0.98); }
+      75% { transform: rotate(-2deg) scale(1.03); }
+    }
+
+    @keyframes fxPanic {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(2px, -2px); }
+      50% { transform: translate(-2px, 2px); }
+      75% { transform: translate(2px, 2px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    @keyframes fxScrollX {
+      0% { transform: translateX(105%); }
+      100% { transform: translateX(-105%); }
+    }
+
+    @keyframes fxScrollY {
+      0% { transform: translateY(105%); opacity: 0; }
+      12% { opacity: 1; }
+      82% { opacity: 1; }
+      100% { transform: translateY(-105%); opacity: 0; }
+    }
+
+    @keyframes fxBlink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    @keyframes fxGhost {
+      0%, 100% { opacity: 1; transform: translateY(0); }
+      50% { opacity: 0.35; transform: translateY(-3px); }
+    }
+
+    @keyframes fxStretch {
+      0%, 100% { transform: scaleX(1) scaleY(1); }
+      50% { transform: scaleX(1.35) scaleY(0.82); }
+    }
+
+    @keyframes fxSquish {
+      0%, 100% { transform: scaleX(1) scaleY(1); }
+      50% { transform: scaleX(0.78) scaleY(1.28); }
+    }
+
+    @keyframes fxJump {
+      0%, 100% { transform: translateY(0) scaleY(1); }
+      40% { transform: translateY(-10px) scaleY(1.05); }
+      65% { transform: translateY(1px) scaleY(0.92); }
+    }
+
+    @keyframes fxFloat {
+      0%, 100% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-8px); opacity: 0.8; }
+    }
+
+    @keyframes fxVibrate {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-1px, 1px); }
+      40% { transform: translate(1px, -1px); }
+      60% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 1px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    @keyframes fxDoom {
+      0%, 100% { transform: scale(1); filter: blur(0); }
+      35% { transform: scale(1.08); filter: blur(0.2px); }
+      70% { transform: scale(0.96); filter: blur(0); }
+    }
+
+    @keyframes fxMelt {
+      0%, 100% { transform: skewX(0deg) translateY(0); filter: blur(0); }
+      50% { transform: skewX(-6deg) translateY(4px); filter: blur(0.6px); }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="viewerBox">
+    <div class="viewerItem">
+      <img class="viewerIcon" src="./icons/youtube.png" />
+      <span id="youtubeViewers">0</span>
+    </div>
+
+    <div class="viewerDivider"></div>
+
+    <div class="viewerItem">
+      <img class="viewerIcon" src="./icons/twitch.png" />
+      <span id="twitchViewers">0</span>
+    </div>
+  </div>
+
+  <div id="chat"></div>
+  <div id="status">Loading overlay...</div>
+
+  <script>
+    const SESSION_ID = "RwFDYfPQdt";
+
+    const SHOW_TEST_MESSAGES = false;
+    const SHOW_STATUS = false;
+    const LOG_RAW_EVENTS = false;
+
+    const chat = document.getElementById("chat");
+    const statusEl = document.getElementById("status");
+    const youtubeViewersEl = document.getElementById("youtubeViewers");
+    const twitchViewersEl = document.getElementById("twitchViewers");
+
+    let messageCount = 0;
+    let rawEventCount = 0;
+    let parsedEventCount = 0;
+    let socketConnected = false;
+
+    const chosenRandomTitles = {};
+    const generatedUserColors = {};
+
+    const PLATFORM_ICONS = {
+      twitch: "twitch.png",
+      youtube: "youtube.png"
+    };
+
+    const CUSTOM_CHAT_EMOTES = [
+      { code: ":probopass:", file: "probo.png" },
+      { code: ":pinhead:", file: "pinhead.png" },
+      { code: ":alien:", file: "alien.png" },
+      { code: ":clownshop:", file: "clown.png" },
+      { code: ":chorb:", file: "chorb.png" },
+      { code: ":bananapeppers:", file: "bananapeppers.png" },
+    ];
+
+    /*
+      WRAPPER TEST CHEAT SHEET
+
+      Emotes:
+        :chris:
+        :peebr:
+        :zane:
+        :rat:
+        :skull:
+
+      Discord-ish:
+        **bold**
+        *italic*
+        __underline__
+        --strike--
+        ^^tiny^^
+        !!huge!!
+
+      Simple effects:
+        ==sparkle==
+        [glow]rainbow glow[/glow]
+        [glow]:chris:[/glow]
+        [shake]shake[/shake]
+        ~~shake shortcut~~
+        ||creepy shortcut||
+        [creepy]creepy uses SpookyFont[/creepy]
+        [rainbow]rainbow[/rainbow]
+        [wave]wave by character[/wave]
+        [bounce]bounce[/bounce]
+        [spin]spin[/spin]
+        [wobble]wobble[/wobble]
+        [panic]panic[/panic]
+        [scroll1]horizontal mini ticker[/scroll1]
+        [scroll2]vertical mini ticker[/scroll2]
+        [mirror]mirror[/mirror]
+        [flip]upside down-ish[/flip]
+        [blink]blink[/blink]
+        [ghost]ghost[/ghost]
+        [stretch]stretch[/stretch]
+        [squish]squish[/squish]
+        [jump]jump[/jump]
+        [float]float[/float]
+        [vibrate]vibrate[/vibrate]
+        [doom]doom[/doom]
+        [melt]melt[/melt]
+
+      Colors:
+        [red]red[/red]
+        [gold]gold[/gold]
+        [green]green[/green]
+        [blue]blue[/blue]
+        [purple]purple[/purple]
+
+      Good tests for this version:
+        [wave]!!huge!![/wave]
+        [wave]__underlined wave__[/wave]
+        [blue][wave]blue wave[/wave][/blue]
+        [wave][red]red wave[/red][/wave]
+        [bounce]!!huge bounce!![/bounce]
+        [green][spin]:chris:[/spin][/green]
+    */
+
+    const RANDOM_NAME_COLORS = [
+      "#ffffff",
+      "#ff6b6b",
+      "#ffd166",
+      "#06d6a0",
+      "#4cc9f0",
+      "#b388ff",
+      "#f72585",
+      "#90be6d",
+      "#f8961e",
+      "#a8dadc"
+    ];
+
+    const USER_COSMETICS = {
+    youtube: {
+      "chris-piche": {
+        icon: "chris.png",
+        title: "",
+        titleOptions: [
+          "Not Bald",
+          "Be nice to me!!!",
+          "does not smell like wet dog",
+          "ouuughhhghhh",
+          "Hey buddy",
+          "The Elden Thing",
+          "Has the most points",
+          "Live Más",
+          "bow bow bow",
+          "Clown",
+          "I'm not bald",
+          "Content Crater",
+          "Your Angle",
+          "tummy hurt",
+          "welcome to hell",
+          "banned",
+          "feebas",
+          "RAT",
+          "did someone say back?",
+          "not cush",
+          "you're trapped",
+          "is lying to you",
+          "big hoss"
+        ],
+        randomTitleEachMessage: true,
+        usernameColor: "#edd290",
+        titleColor: "#b0860d",
+        messageColor: "",
+        nameFontFamily: '"Roboto", Arial, sans-serif',
+        titleFontFamily: '"Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {
+          nameSparkle: true,
+          titleSparkle: false,
+          nameGlow: false,
+          titleGlow: false
+        }
+      },
+
+      "peebr_koifish": {
+        icon: "peebr.png",
+        title: "",
+        usernameColor: "#ff8abb",
+        titleColor: "",
+        messageColor: "",
+        nameFontFamily: '"PeebrFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"PeebrFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "zanegamesss": {
+        icon: "zane.png",
+        title: "",
+        usernameColor: "#d91847",
+        titleColor: "",
+        messageColor: "",
+        nameFontFamily: '"ZaneFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"ZaneFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "scarecrowsketch": {
+        icon: "sketch.png",
+        title: "BALL LORD",
+        usernameColor: "#4169E1",
+        titleColor: "#4169E1",
+        messageColor: "",
+        nameFontFamily: '"SketchFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"SketchFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "cushyt": {
+        icon: "cush.png",
+        title: "FICH",
+        usernameColor: "#FFA500",
+        titleColor: "#FFA500",
+        messageColor: "",
+        nameFontFamily: '"CushFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"CushFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "deliciousjames": {
+        icon: "dj.png",
+        title: "???",
+        usernameColor: "#d8f26d",
+        titleColor: "#d8f26d",
+        messageColor: "",
+        nameFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "suspiciousjamesgames": {
+        icon: "sj.png",
+        title: "???",
+        usernameColor: "#d8f26d",
+        titleColor: "#d8f26d",
+        messageColor: "",
+        nameFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "jobroski47": {
+        icon: "jo.gif",
+        title: "MODERATOR",
+        usernameColor: "#00ff8f",
+        titleColor: "#00ff8f",
+        messageColor: "",
+        nameFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "queenies_roses": {
+        icon: "queenie.gif",
+        title: "MODERATOR",
+        usernameColor: "#a848c5",
+        titleColor: "#a848c5",
+        messageColor: "",
+        nameFontFamily: '"QueenieFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"QueenieFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "r0ttweilerz": {
+        icon: "rott.png",
+        title: "MODERATOR",
+        usernameColor: "#e67e22",
+        titleColor: "#e67e22",
+        messageColor: "",
+        nameFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "yellheahtris": {
+        icon: "tris.gif",
+        title: "MODERATOR",
+        usernameColor: "#3498db",
+        titleColor: "#3498db",
+        messageColor: "",
+        nameFontFamily: '"TrisFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"TrisFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "shal_pal": {
+        icon: "shal.png",
+        title: "Batman or Goku",
+        usernameColor: "#FF5F1F ",
+        titleColor: "#FF5F1F ",
+        messageColor: "",
+        nameFontFamily: '"ShalFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"ShalFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      // YouTube Auction Winners
+      "gabrielm9206": { icon: "rat.png" },
+      "bloodsilver777": { nameFontFamily: '"PapyrusFont", "Roboto", Arial, sans-serif' },
+      "nathanieljones8043": { title: "Scoundrel" },
+      "phillyinkc": { icon: "crown.png" },
+      "fecalwater_rifle": { usernameColor: "#ffd86b", titleColor: "#ffd86b" },
+      "my_bonar": { title: "Stinky" },
+      "ErinThePsyduck": { icon: "feebas.png" },
+      "kierstynlynn": { icon: "cheese.png" },
+      "set-the-table7": { effects: { nameSquish: true } },
+      "jorgen93": { title: "Goblin" },
+      "hiryuthedragonite": { nameFontFamily: '"RetroFont", "Roboto", Arial, sans-serif' },
+      "bakugone8": { icon: "shrimp.png" },
+      "zestyvoyage2188": { usernameColor: "#06d6a0", titleColor: "#06d6a0" },
+      "munny177": { title: "Freak" },
+      "allisonmcg": { icon: "trash.png" },
+      "beilg": { nameFontFamily: '"CursiveFont", "Roboto", Arial, sans-serif' },
+      "aubreyriane": { title: "Pokémon Trainer" },
+      "vortexjb": { usernameColor: "#39ff14", titleColor: "#39ff14", effects: { nameGlow: true } },
+      "sweetberrylarry": { effects: { nameMirror: true } },
+      "avdunn4609": { icon: "hotdog.png" },
+      "jaomang": { title: "VEVO" },
+      "magical_awesome_kid": { title: "Small" },
+      "bennu104": { title: "Unwell" },
+      "andrewprice8241": { title: "Least Wanted" },
+      "iupitar": { nameFontFamily: '"TypewriterFont", "Roboto", Arial, sans-serif' },
+      "majiesz": { icon: "bananapeppers.png" },
+      "toxicfemme": { nameFontFamily: '"PokemonFont", "Roboto", Arial, sans-serif' },
+      "stillstanton": { icon: "probo.png" },
+      "teacup-f9g": { effects: { nameRainbow: true } },
+      "madfloof": { nameFontFamily: '"KindergartenFont", "Roboto", Arial, sans-serif' },
+      "giosuè525": { icon: "chorb.png" },
+
+      // Twitch Auction Winners (Just in Case)
+      "agenderwitchery": { effects: { nameFlip: true } },
+      "vals_0325": { usernameColor: "#ff8abb", titleColor: "#ff8abb" },
+      "jadestone18": { nameFontFamily: '"ComicSansFont", "Roboto", Arial, sans-serif' },
+      "gildedcryptid": { title: "Menace" },
+      "usebuttonstoplay": { nameFontFamily: '"EmulatorFont", "Roboto", Arial, sans-serif' },
+      "nxghtmxr3x": { usernameColor: "#ff4b4b", titleColor: "#ff4b4b" },
+      "freezingfire127": { icon: "toilet.png" },
+      "lyssieleigh": { title: "Verified" },
+      "rabidrhino1240": { title: "Large" },
+      "manetric_lectric": { nameFontFamily: '"RansomFont", "Roboto", Arial, sans-serif' },
+      "aidgis_": { usernameColor: "#4cc9f0", titleColor: "#4cc9f0" },
+      "gilllebowski": { icon: "quip0.png" },
+      "chunkytunawaterobama": { title: "✅" },
+      "snorehawk64": { title: "Gym Leader" },
+      "dinogirlaurora": { effects: { nameScroll: true } },
+      "cinimon1490": { title: "Champion" },
+      "rigsby9": { title: "Fuker" }
+    },
+
+    twitch: {
+      "chrispichetv": {
+        icon: "chris.png",
+        title: "",
+        titleOptions: [
+          "Not Bald",
+          "Be nice to me!!!",
+          "does not smell like wet dog",
+          "ouuughhhghhh",
+          "Hey buddy",
+          "The Elden Thing",
+          "Has the most points",
+          "Live Más",
+          "bow bow bow",
+          "Clown",
+          "I'm not bald",
+          "Content Crater",
+          "Your Angle",
+          "tummy hurt",
+          "welcome to hell",
+          "banned",
+          "feebas",
+          "RAT",
+          "did someone say back?",
+          "not cush",
+          "you're trapped",
+          "is lying to you",
+          "big hoss"
+        ],
+        randomTitleEachMessage: true,
+        usernameColor: "#edd290",
+        titleColor: "#b0860d",
+        messageColor: "",
+        nameFontFamily: '"Roboto", Arial, sans-serif',
+        titleFontFamily: '"Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {
+          nameSparkle: true,
+          titleSparkle: false,
+          nameGlow: false,
+          titleGlow: false
+        }
+      },
+
+      "zanegamesss": {
+        icon: "zane.png",
+        title: "",
+        usernameColor: "#d91847",
+        titleColor: "",
+        messageColor: "",
+        nameFontFamily: '"ZaneFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"ZaneFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "deliciousjames": {
+        icon: "dj.png",
+        title: "???",
+        usernameColor: "#d8f26d",
+        titleColor: "#d8f26d",
+        messageColor: "",
+        nameFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"Wingdings", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "scarecrowsketch": {
+        icon: "sketch.png",
+        title: "BALL LORD",
+        usernameColor: "#4169E1",
+        titleColor: "#4169E1",
+        messageColor: "",
+        nameFontFamily: '"SketchFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"SketchFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "queenies_roses": {
+        icon: "queenie.gif",
+        title: "MODERATOR",
+        usernameColor: "#a848c5",
+        titleColor: "#a848c5",
+        messageColor: "",
+        nameFontFamily: '"QueenieFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"QueenieFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "yellheahtris": {
+        icon: "tris.gif",
+        title: "MODERATOR",
+        usernameColor: "#3498db",
+        titleColor: "#3498db",
+        messageColor: "",
+        nameFontFamily: '"TrisFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"TrisFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "r0ttweilerz": {
+        icon: "rott.png",
+        title: "MODERATOR",
+        usernameColor: "#e67e22",
+        titleColor: "#e67e22",
+        messageColor: "",
+        nameFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      "jobroski47": {
+        icon: "jo.gif",
+        title: "MODERATOR",
+        usernameColor: "#00ff8f",
+        titleColor: "#00ff8f",
+        messageColor: "",
+        nameFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        titleFontFamily: '"RottFont", "Roboto", Arial, sans-serif',
+        messageFontFamily: '"Roboto", Arial, sans-serif',
+        nameFontSize: "",
+        titleFontSize: "",
+        messageFontSize: "",
+        platformIcon: "",
+        platformIconSize: "",
+        userIconSize: "",
+        effects: {}
+      },
+
+      // Twitch Auction winners
+      "agenderwitchery": { effects: { nameFlip: true } },
+      "vals_0325": { usernameColor: "#ff8abb", titleColor: "#ff8abb" },
+      "jadestone18": { nameFontFamily: '"ComicSansFont", "Roboto", Arial, sans-serif' },
+      "gildedcryptid": { title: "Menace" },
+      "usebuttonstoplay": { nameFontFamily: '"EmulatorFont", "Roboto", Arial, sans-serif' },
+      "nxghtmxr3x": { usernameColor: "#ff4b4b", titleColor: "#ff4b4b" },
+      "freezingfire127": { icon: "toilet.png" },
+      "lyssieleigh": { title: "Verified" },
+      "rabidrhino1240": { title: "Large" },
+      "manetric_lectric": { nameFontFamily: '"RansomFont", "Roboto", Arial, sans-serif' },
+      "aidgis_": { usernameColor: "#4cc9f0", titleColor: "#4cc9f0" },
+      "gilllebowski": { icon: "quip0.png" },
+      "chunkytunawaterobama": { title: "✅" },
+      "snorehawk64": { title: "Gym Leader" },
+      "dinogirlaurora": { effects: { nameScroll: true } },
+      "cinimon1490": { title: "Champion" },
+      "rigsby9": { title: "Fuker" },
+
+      // YouTube Auction Winners (Just in Case)
+      "gabrielm9206": { icon: "rat.png" },
+      "bloodsilver777": { nameFontFamily: '"PapyrusFont", "Roboto", Arial, sans-serif' },
+      "nathanieljones8043": { title: "Scoundrel" },
+      "phillyinkc": { icon: "crown.png" },
+      "fecalwater_rifle": { usernameColor: "#ffd86b", titleColor: "#ffd86b" },
+      "my_bonar": { title: "Stinky" },
+      "ErinThePsyduck": { icon: "feebas.png" },
+      "kierstynlynn": { icon: "cheese.png" },
+      "set-the-table7": { effects: { nameSquish: true } },
+      "jorgen93": { title: "Goblin" },
+      "hiryuthedragonite": { nameFontFamily: '"RetroFont", "Roboto", Arial, sans-serif' },
+      "bakugone8": { icon: "shrimp.png" },
+      "zestyvoyage2188": { usernameColor: "#06d6a0", titleColor: "#06d6a0" },
+      "munny177": { title: "Freak" },
+      "allisonmcg": { icon: "trash.png" },
+      "beilg": { nameFontFamily: '"CursiveFont", "Roboto", Arial, sans-serif' },
+      "aubreyriane": { title: "Pokémon Trainer" },
+      "vortexjb": { usernameColor: "#39ff14", titleColor: "#39ff14", effects: { nameGlow: true } },
+      "sweetberrylarry": { effects: { nameMirror: true } },
+      "avdunn4609": { icon: "hotdog.png" },
+      "jaomang": { title: "VEVO" },
+      "magical_awesome_kid": { title: "Small" },
+      "bennu104": { title: "Unwell" },
+      "andrewprice8241": { title: "Least Wanted" },
+      "iupitar": { nameFontFamily: '"TypewriterFont", "Roboto", Arial, sans-serif' },
+      "majiesz": { icon: "bananapeppers.png" },
+      "toxicfemme": { nameFontFamily: '"PokemonFont", "Roboto", Arial, sans-serif' },
+      "stillstanton": { icon: "probo.png" },
+      "teacup-f9g": { effects: { nameRainbow: true } },
+      "madfloof": { nameFontFamily: '"KindergartenFont", "Roboto", Arial, sans-serif' },
+      "giosuè525": { icon: "chorb.png" }
+    }
+  };
+
+    const TEST_MESSAGES = [
+      {
+        username: "@chris-piche",
+        text: "TEST: [wave]!!huge!![/wave] [blue][wave]blue wave[/wave][/blue] [wave]__underline__[/wave] [glow]:chris:[/glow]",
+        html: "TEST: [wave]!!huge!![/wave] [blue][wave]blue wave[/wave][/blue] [wave]__underline__[/wave] [glow]:chris:[/glow]",
+        platform: "youtube",
+        badges: [
+          {
+            src: "https://yt3.ggpht.com/AanLEFPJuRLr4yPAOoaDXGK0T68T3K3mQcx0FsVHdM631g4uS7dLlx_1yXiJHdRvDXpn0XG-aA=s48-c-k",
+            type: "img"
+          }
+        ]
+      },
+      {
+        username: "chrispichetv",
+        text: "[panic]This is the Twitch Chris test.[/panic]",
+        html: "[panic]This is the Twitch Chris test.[/panic]",
+        platform: "twitch",
+        badges: []
+      },
+      {
+        username: "@ZaneGamesss",
+        text: "This is the YouTube Zane test. :zane:",
+        html: "This is the YouTube Zane test. :zane:",
+        platform: "youtube",
+        badges: []
+      },
+      {
+        username: "ZaneGamesss",
+        text: "[wobble]This is the Twitch Zane test.[/wobble]",
+        html: "[wobble]This is the Twitch Zane test.[/wobble]",
+        platform: "twitch",
+        badges: []
+      }
+    ];
+
+    function updateStatus(extra) {
+      if (!SHOW_STATUS) {
+        statusEl.textContent = "";
+        return;
+      }
+
+      statusEl.textContent =
+        `Connected: ${socketConnected ? "yes" : "no"} | Raw: ${rawEventCount} | Parsed: ${parsedEventCount} | Shown: ${messageCount}` +
+        (extra ? ` | ${extra}` : "");
+    }
+
+    function normalizeUsername(username) {
+      return String(username || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^@/, "");
+    }
+
+    function normalizePlatform(platform) {
+      const raw = String(platform || "").toLowerCase();
+
+      if (raw.includes("youtube")) return "youtube";
+      if (raw.includes("twitch")) return "twitch";
+
+      return raw;
+    }
+
+    function getCosmetics(username, platform) {
+      const key = normalizeUsername(username);
+      const cleanPlatform = normalizePlatform(platform);
+
+      if (
+        USER_COSMETICS[cleanPlatform] &&
+        USER_COSMETICS[cleanPlatform][key]
+      ) {
+        return USER_COSMETICS[cleanPlatform][key];
+      }
+
+      return {};
+    };
+
+    function getCosmeticLookupKey(username, platform) {
+      return `${normalizePlatform(platform)}:${normalizeUsername(username)}`;
+    }
+
+    function getRandomUserColor(usernameKey, socialStreamColor) {
+      if (socialStreamColor) {
+        generatedUserColors[usernameKey] = socialStreamColor;
+        return socialStreamColor;
+      }
+
+      if (!generatedUserColors[usernameKey]) {
+        const index = Math.floor(Math.random() * RANDOM_NAME_COLORS.length);
+        generatedUserColors[usernameKey] = RANDOM_NAME_COLORS[index];
+      }
+
+      return generatedUserColors[usernameKey];
+    }
+
+    function getTitleForUser(cosmetics, lookupKey) {
+      if (Array.isArray(cosmetics.titleOptions) && cosmetics.titleOptions.length > 0) {
+        const options = cosmetics.titleOptions.filter(Boolean);
+
+        if (options.length === 0) return "";
+
+        if (cosmetics.randomTitleEachMessage === false) {
+          if (!chosenRandomTitles[lookupKey]) {
+            const index = Math.floor(Math.random() * options.length);
+            chosenRandomTitles[lookupKey] = options[index];
+          }
+
+          return chosenRandomTitles[lookupKey] || "";
+        }
+
+        const index = Math.floor(Math.random() * options.length);
+        return options[index];
+      }
+
+      return cosmetics.title || "";
+    }
+
+
+
+    // GOBLIN BUS / TEMP CHAT EFFECTS
+    const GOBLIN_EFFECTS = {
+      hiddenUsers: {},
+      goblinUsers: {},
+      scrambledUsers: {},
+      globalScrambleUntil: 0
+    };
+
+    let goblinBus = null;
+
+    function nowMs() {
+      return Date.now();
+    }
+
+    function goblinEffectKey(username, platform) {
+      return `${normalizePlatform(platform)}:${normalizeUsername(username)}`;
+    }
+
+    function setGoblinTempEffect(bucket, username, platform, durationMs) {
+      const key = goblinEffectKey(username, platform);
+      if (!key || key === ':') return;
+      GOBLIN_EFFECTS[bucket][key] = nowMs() + Number(durationMs || 60000);
+    }
+
+    function isGoblinEffectActive(bucket, username, platform) {
+      const key = goblinEffectKey(username, platform);
+      const until = GOBLIN_EFFECTS[bucket][key] || 0;
+      if (until && until < nowMs()) {
+        delete GOBLIN_EFFECTS[bucket][key];
+        return false;
+      }
+      return until > nowMs();
+    }
+
+    function getGoblinNonsense() {
+      const lines = [
+        'HAHAHAHAHAHAHAHA',
+        'OUUUGHGHGHGHGHG',
+        'I AM A NORMAL CHAT MEMBER',
+        'GOBLIN GOBLIN GOBLIN',
+        'HOTDOG ERROR HOTDOG ERROR',
+        'ZACH HADEL CRITTER NOISE',
+        'MY WORDS HAVE BEEN TAKEN',
+        'THE GOBLIN IS TYPING FOR ME',
+        'I LOVE MUD AND I AM FINE',
+        'AAAAA LITTLE CRITTER CODED AAAAA',
+        'DALE HAS MY KEYBOARD',
+        'I HAVE BEEN TEMPORARILY HOTDOGGED'
+      ];
+      return lines[Math.floor(Math.random() * lines.length)];
+    }
+
+    function emitGoblinBus(message) {
+      const payload = Object.assign({ source: 'chat' }, message || {});
+      try {
+        if (goblinBus) goblinBus.postMessage(payload);
+        localStorage.setItem('goblin_bus', JSON.stringify(Object.assign({}, payload, { _t: Date.now() })));
+      } catch (e) {}
+    }
+
+    function handleGoblinBusMessage(message) {
+      if (!message || message.source === 'chat') return;
+
+      if (message.type === 'chat_effect') {
+        const duration = Number(message.duration || 60000);
+
+        if (message.effect === 'hide') {
+          setGoblinTempEffect('hiddenUsers', message.username, message.platform, duration);
+        }
+
+        if (message.effect === 'goblinize') {
+          setGoblinTempEffect('goblinUsers', message.username, message.platform, duration);
+        }
+
+        if (message.effect === 'scramble') {
+          setGoblinTempEffect('scrambledUsers', message.username, message.platform, duration);
+        }
+
+        if (message.effect === 'globalScramble') {
+          GOBLIN_EFFECTS.globalScrambleUntil = nowMs() + duration;
+        }
+      }
+    }
+
+    try {
+      goblinBus = new BroadcastChannel('goblin_bus');
+      goblinBus.onmessage = event => handleGoblinBusMessage(event.data);
+    } catch (e) {}
+
+    window.addEventListener('storage', event => {
+      if (event.key === 'goblin_bus' && event.newValue) {
+        try {
+          handleGoblinBusMessage(JSON.parse(event.newValue));
+        } catch (e) {}
+      }
+    });
+
+    window.goblinChat = {
+      hideUser(username, platform = '', duration = 60000) {
+        setGoblinTempEffect('hiddenUsers', username, platform, duration);
+      },
+      goblinizeUser(username, platform = '', duration = 60000) {
+        setGoblinTempEffect('goblinUsers', username, platform, duration);
+      },
+      scrambleUser(username, platform = '', duration = 60000) {
+        setGoblinTempEffect('scrambledUsers', username, platform, duration);
+      },
+      globalScramble(duration = 45000) {
+        GOBLIN_EFFECTS.globalScrambleUntil = nowMs() + duration;
+      }
+    };
+
+    function forwardMessageToGoblin(parsed) {
+      if (!parsed || !parsed.username) return;
+      emitGoblinBus({
+        type: 'chat_message',
+        username: parsed.username,
+        platform: parsed.platform || '',
+        text: parsed.text || stripHtml(parsed.html || '') || ''
+      });
+    }
+
+    function addMessage({ username, text, html, platform, badges, nameColor, textColor }) {
+      if (!username || (!text && !html)) {
+        updateStatus("Skipped blank msg");
+        return;
+      }
+
+      const cleanPlatform = normalizePlatform(platform);
+      const key = normalizeUsername(username);
+
+      if (isGoblinEffectActive('hiddenUsers', username, platform)) {
+        updateStatus("Goblin hid a message");
+        return;
+      }
+
+      const goblinized = isGoblinEffectActive('goblinUsers', username, platform);
+      const scrambled = isGoblinEffectActive('scrambledUsers', username, platform) || GOBLIN_EFFECTS.globalScrambleUntil > nowMs() && Math.random() < 0.25;
+
+      if (scrambled) {
+        const nonsense = getGoblinNonsense();
+        text = nonsense;
+        html = formatChatMessage(nonsense);
+      }
+
+      const lookupKey = getCosmeticLookupKey(username, platform);
+      const cosmetics = getCosmetics(username, platform);
+
+      const defaultPlatformIcon = PLATFORM_ICONS[cleanPlatform] || null;
+      const platformIconFile = cosmetics.platformIcon || defaultPlatformIcon;
+      const badgeHtml = sanitizeBadges(badges);
+
+      let usernameColor = cosmetics.usernameColor || getRandomUserColor(`${cleanPlatform}:${key}`, nameColor);
+      let titleColor = cosmetics.titleColor || "#ffd86b";
+      let messageColor = cosmetics.messageColor || textColor || "#ffffff";
+
+      const nameFontFamily =
+        cosmetics.nameFontFamily ||
+        cosmetics.fontFamily ||
+        '"Roboto", Arial, sans-serif';
+
+      const titleFontFamily =
+        cosmetics.titleFontFamily ||
+        cosmetics.nameFontFamily ||
+        cosmetics.fontFamily ||
+        '"Roboto", Arial, sans-serif';
+
+      const messageFontFamily =
+        cosmetics.messageFontFamily ||
+        cosmetics.fontFamily ||
+        '"Roboto", Arial, sans-serif';
+
+      const nameFontSize = cosmetics.nameFontSize || "30px";
+      const titleFontSize = cosmetics.titleFontSize || "16px";
+      const messageFontSize = cosmetics.messageFontSize || "32px";
+
+      const nameWeight = cosmetics.nameWeight || 900;
+      const titleWeight = cosmetics.titleWeight || 900;
+      const messageWeight = cosmetics.messageWeight || 800;
+
+      const userIconSize = cosmetics.userIconSize || "34px";
+      const platformIconSize = cosmetics.platformIconSize || "30px";
+
+      let title = getTitleForUser(cosmetics, lookupKey);
+      let effects = Object.assign({}, cosmetics.effects || {});
+
+      if (goblinized) {
+        username = "GOBLIN";
+        usernameColor = "#39ff14";
+        titleColor = "#39ff14";
+        messageColor = "#b6ff8a";
+        title = "TEMPORARY GOBLIN";
+        effects.nameShake = true;
+        effects.nameGlow = true;
+        effects.messageCreepy = true;
+      }
+
+      if (scrambled) {
+        effects.messageShake = true;
+        effects.messageGlow = true;
+      }
+
+      const usernameClasses = [
+        "username",
+        effects.nameShake ? "fx-name-shake" : "",
+        effects.nameSparkle ? "fx-name-sparkle" : "",
+        effects.nameGlow ? "fx-name-glow" : "",
+        effects.nameCreepy ? "fx-name-creepy" : "",
+        effects.nameRainbow ? "fx-name-rainbow" : "",
+        effects.nameWave ? "fx-name-wave" : "",
+        effects.nameFlip ? "fx-name-flip" : "",
+        effects.nameMirror ? "fx-name-mirror" : "",
+        effects.nameSquish ? "fx-name-squish" : "",
+        effects.nameScroll ? "fx-name-scroll" : ""
+      ].filter(Boolean).join(" ");
+
+      const titleClasses = [
+        "title",
+        effects.titleShake ? "fx-title-shake" : "",
+        effects.titleSparkle ? "fx-title-sparkle" : "",
+        effects.titleGlow ? "fx-title-glow" : "",
+        effects.titleCreepy ? "fx-title-creepy" : "",
+        effects.titleRainbow ? "fx-title-rainbow" : "",
+        effects.titleWave ? "fx-title-wave" : ""
+      ].filter(Boolean).join(" ");
+
+      const textClasses = [
+        "text",
+        effects.messageShake ? "fx-message-shake" : "",
+        effects.messageSparkle ? "fx-message-sparkle" : "",
+        effects.messageGlow ? "fx-message-glow" : "",
+        effects.messageCreepy ? "fx-message-creepy" : "",
+        effects.messageRainbow ? "fx-message-rainbow" : "",
+        effects.messageWave ? "fx-message-wave" : ""
+      ].filter(Boolean).join(" ");
+
+      const message = document.createElement("div");
+      message.className = "message";
+
+      message.style.setProperty("--username-color", usernameColor);
+      message.style.setProperty("--title-color", titleColor);
+      message.style.setProperty("--message-color", messageColor);
+      message.style.setProperty("--name-font", nameFontFamily);
+      message.style.setProperty("--title-font", titleFontFamily);
+      message.style.setProperty("--message-font", messageFontFamily);
+      message.style.setProperty("--name-font-size", nameFontSize);
+      message.style.setProperty("--title-font-size", titleFontSize);
+      message.style.setProperty("--message-font-size", messageFontSize);
+      message.style.setProperty("--name-weight", nameWeight);
+      message.style.setProperty("--title-weight", titleWeight);
+      message.style.setProperty("--message-weight", messageWeight);
+      message.style.setProperty("--user-icon-size", userIconSize);
+      message.style.setProperty("--platform-icon-size", platformIconSize);
+
+      const usernameHtml = effects.nameScroll
+        ? `<span class="${usernameClasses}"><span class="name-scroll-inner">${escapeHtml(username)}</span></span>`
+        : `<span class="${usernameClasses}">${escapeHtml(username)}</span>`;
+
+      message.innerHTML = `
+        <div class="name-row">
+          ${cosmetics.icon ? `<img class="user-icon" src="./icons/${escapeHtml(cosmetics.icon)}" />` : ""}
+          ${platformIconFile ? `<img class="platform-icon" src="./icons/${escapeHtml(platformIconFile)}" />` : ""}
+          ${badgeHtml}
+          ${usernameHtml}
+          ${title ? `<span class="${titleClasses}">${escapeHtml(title)}</span>` : ""}
+        </div>
+        <div class="${textClasses}">${html || escapeHtml(text)}</div>
+      `;
+
+      chat.appendChild(message);
+      messageCount++;
+
+      while (chat.children.length > 14) {
+        chat.removeChild(chat.firstElementChild);
+      }
+
+      updateStatus();
+    }
+
+    function extractSocialStreamMessage(raw) {
+      let data = raw;
+
+      if (!data || typeof data !== "object") return null;
+
+      if (data.event === "viewer_updates") {
+        return null;
+      }
+
+      if (typeof data.value === "string") {
+        try {
+          const parsed = JSON.parse(data.value);
+          if (parsed && typeof parsed === "object") data = parsed;
+        } catch (e) {}
+      }
+
+      if (data.content && typeof data.content === "object") {
+        data = data.content;
+      }
+
+      if (data.value && typeof data.value === "object") {
+        data = data.value;
+      }
+
+      if (data.data && typeof data.data === "object") {
+        data = data.data;
+      }
+
+      const username =
+        data.chatname ||
+        data.name ||
+        data.username ||
+        data.displayName ||
+        data.displayname ||
+        data.author ||
+        "";
+
+      const rawMessage =
+        data.chatmessage ||
+        data.message ||
+        data.text ||
+        data.comment ||
+        "";
+
+      const platform =
+        data.type ||
+        data.platform ||
+        data.source ||
+        "";
+
+      const badges = collectBadgesFromData(data, platform);
+
+      if (!username || !rawMessage) return null;
+
+      return {
+        username,
+        html: formatChatMessage(rawMessage),
+        text: stripHtml(rawMessage),
+        platform,
+        badges,
+        nameColor: data.nameColor || "",
+        textColor: data.textColor || ""
+      };
+    }
+
+    function collectBadgesFromData(data, platform) {
+      const badgeSources = [];
+
+      function addBadgeSource(field) {
+        if (!field) return;
+
+        if (Array.isArray(field)) {
+          field.forEach(item => {
+            if (item) badgeSources.push(item);
+          });
+        } else {
+          badgeSources.push(field);
+        }
+      }
+
+      const rawBadgeFields = [
+        data.chatbadges,
+        data.chatBadges,
+        data.badges,
+        data.userbadges,
+        data.userBadges,
+        data.memberBadges,
+        data.membershipBadge,
+        data.badge,
+        data.badgeList,
+        data.user_badges
+      ];
+
+      rawBadgeFields.forEach(addBadgeSource);
+
+      const cleanPlatform = normalizePlatform(platform);
+
+      const possibleMemberValues = [
+        data.membership,
+        data.member,
+        data.isMember,
+        data.ismember,
+        data.isSponsor,
+        data.issponsor,
+        data.sponsor,
+        data.subscriber,
+        data.isSubscriber,
+        data.isSub,
+        data.chatmember
+      ];
+
+      const possibleModValues = [
+        data.mod,
+        data.isMod,
+        data.ismod,
+        data.moderator,
+        data.isModerator,
+        data.is_moderator
+      ];
+
+      const possibleOwnerValues = [
+        data.owner,
+        data.isOwner,
+        data.isowner,
+        data.host,
+        data.isHost,
+        data.channelOwner
+      ];
+
+      const alreadyHasRealBadge = badgeSources.some(item => {
+        if (!item) return false;
+
+        if (typeof item === "string") {
+          return item.includes("<img") || item.startsWith("http");
+        }
+
+        if (typeof item === "object") {
+          return Boolean(
+            item.src ||
+            item.url ||
+            item.image ||
+            item.imageUrl ||
+            item.image_url ||
+            item.icon ||
+            item.badge
+          );
+        }
+
+        return false;
+      });
+
+      if (!alreadyHasRealBadge && cleanPlatform === "youtube") {
+        if (hasTruthyValue(possibleOwnerValues)) {
+          badgeSources.push({ src: "./icons/youtube-owner.png", alt: "Owner", local: true });
+        }
+
+        if (hasTruthyValue(possibleModValues)) {
+          badgeSources.push({ src: "./icons/youtube-mod.png", alt: "Moderator", local: true });
+        }
+
+        if (hasTruthyValue(possibleMemberValues)) {
+          badgeSources.push({ src: "./icons/youtube-member.png", alt: "Member", local: true });
+        }
+      }
+
+      if (!alreadyHasRealBadge && cleanPlatform === "twitch") {
+        if (hasTruthyValue(possibleModValues)) {
+          badgeSources.push({ src: "./icons/twitch-mod.png", alt: "Moderator", local: true });
+        }
+
+        if (
+          data.vip ||
+          data.isVip ||
+          data.isVIP ||
+          data.badgeType === "vip"
+        ) {
+          badgeSources.push({ src: "./icons/twitch-vip.png", alt: "VIP", local: true });
+        }
+
+        if (hasTruthyValue(possibleMemberValues)) {
+          badgeSources.push({ src: "./icons/twitch-sub.png", alt: "Subscriber", local: true });
+        }
+      }
+
+      return badgeSources;
+    }
+
+    function hasTruthyValue(values) {
+      return values.some(value => {
+        if (value === true) return true;
+        if (typeof value === "number") return value > 0;
+
+        const text = String(value || "").toLowerCase().trim();
+
+        return (
+          text === "true" ||
+          text === "yes" ||
+          text === "1" ||
+          text.includes("member") ||
+          text.includes("sponsor") ||
+          text.includes("subscriber") ||
+          text.includes("moderator") ||
+          text.includes("owner")
+        );
+      });
+    }
+
+    function formatChatMessage(value) {
+      let output = sanitizeChatMessage(value);
+
+      /*
+        Custom local emotes.
+        Example:
+          :chris:
+          :peebr:
+      */
+      CUSTOM_CHAT_EMOTES.forEach(emote => {
+        if (!emote || !emote.code || !emote.file) return;
+
+        const safeCode = escapeHtml(emote.code);
+        const safeFile = escapeHtml(emote.file);
+        const safeAlt = escapeHtml(emote.code.replace(/:/g, ""));
+        const regex = new RegExp(escapeRegExp(safeCode), "g");
+
+        output = output.replace(
+          regex,
+          `<img class="custom-chat-emote" src="./icons/emotes/${safeFile}" alt="${safeAlt}" title="${safeAlt}">`
+        );
+      });
+
+      /*
+        PASS 1:
+        Text/style wrappers first.
+        This allows [wave]!!huge!![/wave], [wave]__underline__[/wave],
+        [blue][spin]text[/spin][/blue], etc.
+      */
+
+      output = output.replace(/\*\*([^*]+)\*\*/g, '<span class="msg-bold">$1</span>');
+      output = output.replace(/__([^_]+)__/g, '<span class="msg-underline">$1</span>');
+      output = output.replace(/\^\^([^^]+)\^\^/g, '<span class="msg-tiny">$1</span>');
+      output = output.replace(/!!([^!]+)!!/g, '<span class="msg-huge">$1</span>');
+      output = output.replace(/--([^-]+)--/g, '<span class="msg-strike">$1</span>');
+
+      output = output.replace(/\[red\]([\s\S]*?)\[\/red\]/gi, '<span class="msg-red">$1</span>');
+      output = output.replace(/\[gold\]([\s\S]*?)\[\/gold\]/gi, '<span class="msg-gold">$1</span>');
+      output = output.replace(/\[green\]([\s\S]*?)\[\/green\]/gi, '<span class="msg-green">$1</span>');
+      output = output.replace(/\[blue\]([\s\S]*?)\[\/blue\]/gi, '<span class="msg-blue">$1</span>');
+      output = output.replace(/\[purple\]([\s\S]*?)\[\/purple\]/gi, '<span class="msg-purple">$1</span>');
+
+      /*
+        Creepy is both style + animation, so it gets applied before wave.
+      */
+      output = output.replace(/\|\|([^|]+)\|\|/g, '<span class="msg-creepy">$1</span>');
+      output = output.replace(/\[creepy\]([\s\S]*?)\[\/creepy\]/gi, '<span class="msg-creepy">$1</span>');
+
+      /*
+        Italic goes after bold so **bold** does not get partially eaten.
+      */
+      output = output.replace(/\*([^*]+)\*/g, '<span class="msg-italic">$1</span>');
+
+      /*
+        PASS 2:
+        Animation/movement wrappers after styles.
+      */
+
+      output = output.replace(/~~([^~]+)~~/g, '<span class="msg-shake">$1</span>');
+      output = output.replace(/==([^=]+)==/g, '<span class="msg-sparkle">$1</span>');
+
+      output = output.replace(/\[glow\]([\s\S]*?)\[\/glow\]/gi, '<span class="msg-glow">$1</span>');
+      output = output.replace(/\[sparkle\]([\s\S]*?)\[\/sparkle\]/gi, '<span class="msg-sparkle">$1</span>');
+      output = output.replace(/\[shake\]([\s\S]*?)\[\/shake\]/gi, '<span class="msg-shake">$1</span>');
+      output = output.replace(/\[bounce\]([\s\S]*?)\[\/bounce\]/gi, '<span class="msg-bounce">$1</span>');
+      output = output.replace(/\[spin\]([\s\S]*?)\[\/spin\]/gi, '<span class="msg-spin">$1</span>');
+      output = output.replace(/\[wobble\]([\s\S]*?)\[\/wobble\]/gi, '<span class="msg-wobble">$1</span>');
+
+      /*
+        Wave must be late because it splits text into per-character spans.
+      */
+      output = output.replace(/\[wave\]([\s\S]*?)\[\/wave\]/gi, (match, inner) => makeWaveHtml(inner));
+
+      output = output.replace(/\[panic\]([\s\S]*?)\[\/panic\]/gi, '<span class="msg-panic">$1</span>');
+      output = output.replace(/\[scroll1\]([\s\S]*?)\[\/scroll1\]/gi, '<span class="msg-scroll-x"><span class="scroll-inner">$1</span></span>');
+      output = output.replace(/\[scroll2\]([\s\S]*?)\[\/scroll2\]/gi, '<span class="msg-scroll-y"><span class="scroll-inner">$1</span></span>');
+      output = output.replace(/\[mirror\]([\s\S]*?)\[\/mirror\]/gi, '<span class="msg-mirror">$1</span>');
+      output = output.replace(/\[flip\]([\s\S]*?)\[\/flip\]/gi, '<span class="msg-flip">$1</span>');
+      output = output.replace(/\[blink\]([\s\S]*?)\[\/blink\]/gi, '<span class="msg-blink">$1</span>');
+      output = output.replace(/\[ghost\]([\s\S]*?)\[\/ghost\]/gi, '<span class="msg-ghost">$1</span>');
+      output = output.replace(/\[stretch\]([\s\S]*?)\[\/stretch\]/gi, '<span class="msg-stretch">$1</span>');
+      output = output.replace(/\[squish\]([\s\S]*?)\[\/squish\]/gi, '<span class="msg-squish">$1</span>');
+      output = output.replace(/\[jump\]([\s\S]*?)\[\/jump\]/gi, '<span class="msg-jump">$1</span>');
+      output = output.replace(/\[float\]([\s\S]*?)\[\/float\]/gi, '<span class="msg-float">$1</span>');
+      output = output.replace(/\[vibrate\]([\s\S]*?)\[\/vibrate\]/gi, '<span class="msg-vibrate">$1</span>');
+      output = output.replace(/\[doom\]([\s\S]*?)\[\/doom\]/gi, '<span class="msg-doom">$1</span>');
+      output = output.replace(/\[melt\]([\s\S]*?)\[\/melt\]/gi, '<span class="msg-melt">$1</span>');
+      output = output.replace(/\[rainbow\]([\s\S]*?)\[\/rainbow\]/gi, '<span class="msg-rainbow">$1</span>');
+
+      return output;
+    }
+
+    function makeWaveHtml(innerHtml) {
+      const parts = String(innerHtml).split(/(<[^>]+>)/g).filter(Boolean);
+      let charIndex = 0;
+
+      const waved = parts.map(part => {
+        if (part.startsWith("<") && part.endsWith(">")) {
+          return part;
+        }
+
+        return Array.from(part).map(char => {
+          charIndex++;
+
+          if (char === " ") {
+            return `<span class="wave-char" style="--i:${charIndex}">&nbsp;</span>`;
+          }
+
+          if (char === "\n" || char === "\r" || char === "\t") {
+            return char;
+          }
+
+          return `<span class="wave-char" style="--i:${charIndex}">${char}</span>`;
+        }).join("");
+      }).join("");
+
+      return `<span class="msg-wave">${waved}</span>`;
+    }
+
+    function sanitizeChatMessage(value) {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = String(value || "");
+
+      function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return document.createTextNode(node.textContent || "");
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          return document.createTextNode("");
+        }
+
+        const tag = node.tagName.toLowerCase();
+
+        if (tag === "img") {
+          const src = node.getAttribute("src") || "";
+          const alt = node.getAttribute("alt") || "";
+          const title = node.getAttribute("title") || alt || "";
+
+          if (!isAllowedImageSrc(src)) {
+            return document.createTextNode(alt || title || "");
+          }
+
+          const img = document.createElement("img");
+          img.className = "emote";
+          img.src = src;
+          img.alt = alt;
+          img.title = title;
+          return img;
+        }
+
+        if (tag === "br") {
+          return document.createElement("br");
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        node.childNodes.forEach(child => {
+          fragment.appendChild(cleanNode(child));
+        });
+
+        return fragment;
+      }
+
+      const cleaned = document.createElement("div");
+
+      wrapper.childNodes.forEach(child => {
+        cleaned.appendChild(cleanNode(child));
+      });
+
+      return cleaned.innerHTML;
+    }
+
+    function sanitizeBadges(value) {
+      if (!value) return "";
+
+      function makeBadgeImg(src, alt) {
+        if (!src) return "";
+
+        if (String(src).startsWith("./icons/")) {
+          return `<img class="badge-icon" src="${escapeHtml(src)}" alt="${escapeHtml(alt || "badge")}" title="${escapeHtml(alt || "badge")}" />`;
+        }
+
+        if (!isAllowedImageSrc(src)) return "";
+
+        return `<img class="badge-icon" src="${escapeHtml(src)}" alt="${escapeHtml(alt || "badge")}" title="${escapeHtml(alt || "badge")}" />`;
+      }
+
+      if (Array.isArray(value)) {
+        return value.map(item => {
+          if (Array.isArray(item)) {
+            return sanitizeBadges(item);
+          }
+
+          if (typeof item === "string") {
+            if (item.startsWith("http") || item.startsWith("./icons/")) {
+              return makeBadgeImg(item, "badge");
+            }
+
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = item;
+
+            return Array.from(wrapper.querySelectorAll("img")).map(img => {
+              const src = img.getAttribute("src") || "";
+              const alt = img.getAttribute("alt") || img.getAttribute("title") || "badge";
+              return makeBadgeImg(src, alt);
+            }).join("");
+          }
+
+          if (item && typeof item === "object") {
+            const src =
+              item.src ||
+              item.url ||
+              item.image ||
+              item.imageUrl ||
+              item.image_url ||
+              item.icon ||
+              item.badge ||
+              "";
+
+            const alt =
+              item.alt ||
+              item.title ||
+              item.name ||
+              item.badgeType ||
+              item.label ||
+              item.type ||
+              "badge";
+
+            return makeBadgeImg(src, alt);
+          }
+
+          return "";
+        }).join("");
+      }
+
+      if (typeof value === "string") {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = value;
+
+        const imgs = Array.from(wrapper.querySelectorAll("img"));
+
+        return imgs.map(img => {
+          const src = img.getAttribute("src") || "";
+          const alt = img.getAttribute("alt") || img.getAttribute("title") || "badge";
+          return makeBadgeImg(src, alt);
+        }).join("");
+      }
+
+      if (typeof value === "object") {
+        return sanitizeBadges([value]);
+      }
+
+      return "";
+    }
+
+    function isAllowedImageSrc(src) {
+      const safeSrc = String(src || "").toLowerCase();
+
+      if (!safeSrc) return false;
+
+      if (
+        safeSrc.startsWith("./icons/") ||
+        safeSrc.startsWith("icons/") ||
+        safeSrc.startsWith("data:image/")
+      ) {
+        return true;
+      }
+
+      const allowedImageHostHints = [
+        "ytimg.com",
+        "ggpht.com",
+        "googleusercontent.com",
+        "gstatic.com",
+        "fonts.gstatic.com",
+
+        "twimg.com",
+        "twitch.tv",
+        "jtvnw.net",
+        "static-cdn.jtvnw.net",
+
+        "betterttv.net",
+        "bttv.net",
+        "cdn.betterttv.net",
+
+        "frankerfacez.com",
+        "cdn.frankerfacez.com",
+
+        "7tv.app",
+        "7tv.io",
+        "cdn.7tv.app",
+
+        "socialstream.ninja",
+        "images.weserv.nl"
+      ];
+
+      return allowedImageHostHints.some(host => safeSrc.includes(host));
+    }
+
+    function stripHtml(value) {
+      const temp = document.createElement("div");
+      temp.innerHTML = String(value || "");
+      return temp.textContent || temp.innerText || "";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function handleViewerUpdate(raw) {
+      if (!raw || raw.event !== "viewer_updates" || !raw.meta) return false;
+
+      const youtubeCount = Number(raw.meta.youtube || 0);
+      const twitchCount = Number(raw.meta.twitch || 0);
+
+      if (youtubeViewersEl) {
+        youtubeViewersEl.textContent = formatViewerCount(youtubeCount);
+      }
+
+      if (twitchViewersEl) {
+        twitchViewersEl.textContent = formatViewerCount(twitchCount);
+      }
+
+      return true;
+    }
+
+    function formatViewerCount(value) {
+      const count = Number(value || 0);
+
+      if (count >= 1000000) {
+        return `${(count / 1000000).toFixed(1).replace(".0", "")}M`;
+      }
+
+      if (count >= 1000) {
+        return `${(count / 1000).toFixed(1).replace(".0", "")}K`;
+      }
+
+      return String(count);
+    }
+
+    function connectToSocialStream() {
+      const socketUrl = `wss://io.socialstream.ninja/join/${SESSION_ID}/4`;
+      const ws = new WebSocket(socketUrl);
+
+      updateStatus("Connecting");
+
+      ws.onopen = () => {
+        socketConnected = true;
+        updateStatus("Socket open");
+      };
+
+      ws.onmessage = (event) => {
+        rawEventCount++;
+
+        try {
+          const raw = JSON.parse(event.data);
+
+          if (LOG_RAW_EVENTS) {
+            console.log("RAW SOCIAL STREAM EVENT:", raw);
+          }
+
+          if (handleViewerUpdate(raw)) {
+            updateStatus("Viewer update");
+            return;
+          }
+
+          const parsed = extractSocialStreamMessage(raw);
+
+          if (parsed) {
+            parsedEventCount++;
+            forwardMessageToGoblin(parsed);
+            addMessage(parsed);
+          } else {
+            updateStatus("Raw received, not parsed");
+          }
+        } catch (error) {
+          updateStatus("JSON parse error");
+          console.error("Could not parse Social Stream message:", error, event.data);
+        }
+      };
+
+      ws.onerror = () => {
+        socketConnected = false;
+        updateStatus("Socket error");
+      };
+
+      ws.onclose = () => {
+        socketConnected = false;
+        updateStatus("Socket closed, reconnecting");
+        setTimeout(connectToSocialStream, 3000);
+      };
+    }
+
+    function runTestMessages() {
+      let index = 0;
+
+      function cycle() {
+        addMessage(TEST_MESSAGES[index]);
+        index = (index + 1) % TEST_MESSAGES.length;
+      }
+
+      cycle();
+      setInterval(cycle, 2000);
+    }
+
+    updateStatus("Overlay loaded");
+    connectToSocialStream();
+
+    if (SHOW_TEST_MESSAGES) {
+      runTestMessages();
+    }
+  </script>
+</body>
+</html>
