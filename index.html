@@ -596,6 +596,10 @@
       filter: drop-shadow(0 0 10px rgba(57,255,20,0.9));
     }
 
+    .goblin-hidden {
+      display: none !important;
+    }
+
     @keyframes popIn {
       from {
         opacity: 0;
@@ -1693,7 +1697,9 @@
     function setGoblinTempEffect(bucket, username, platform, durationMs) {
       const key = goblinEffectKey(username, platform);
       if (!key || key === ':') return;
-      GOBLIN_EFFECTS[bucket][key] = nowMs() + Number(durationMs || 60000);
+      const duration = Number(durationMs || 60000);
+      GOBLIN_EFFECTS[bucket][key] = nowMs() + duration;
+      scheduleGoblinRenderRefresh(duration);
     }
 
     function isGoblinEffectActive(bucket, username, platform) {
@@ -1704,6 +1710,74 @@
         return false;
       }
       return until > nowMs();
+    }
+
+    function refreshGoblinRenderedMessages() {
+      document.querySelectorAll('.message[data-goblin-key]').forEach(message => {
+        const originalUsername = message.dataset.goblinUsername || '';
+        const originalPlatform = message.dataset.goblinPlatform || '';
+
+        if (message.dataset.goblinOriginalHtml) {
+          message.innerHTML = message.dataset.goblinOriginalHtml;
+        }
+
+        message.classList.remove('goblin-hidden', 'goblin-chat-temp');
+
+        const hidden = isGoblinEffectActive('hiddenUsers', originalUsername, originalPlatform);
+        const goblinized = isGoblinEffectActive('goblinUsers', originalUsername, originalPlatform);
+        const scrambled = isGoblinEffectActive('scrambledUsers', originalUsername, originalPlatform) ||
+          (GOBLIN_EFFECTS.globalScrambleUntil > nowMs() && Math.random() < 0.25);
+
+        if (hidden) {
+          message.classList.add('goblin-hidden');
+          return;
+        }
+
+        if (goblinized) {
+          message.classList.add('goblin-chat-temp');
+          message.style.setProperty('--username-color', '#39ff14');
+          message.style.setProperty('--title-color', '#39ff14');
+          message.style.setProperty('--message-color', '#b6ff8a');
+
+          const nameEl = message.querySelector('.username');
+          if (nameEl) nameEl.textContent = 'GOBLIN';
+
+          let titleEl = message.querySelector('.title');
+          if (titleEl) {
+            titleEl.textContent = 'TEMPORARY GOBLIN';
+          } else {
+            const row = message.querySelector('.name-row');
+            if (row) {
+              titleEl = document.createElement('span');
+              titleEl.className = 'title fx-title-glow';
+              titleEl.textContent = 'TEMPORARY GOBLIN';
+              row.appendChild(titleEl);
+            }
+          }
+
+          if (nameEl) nameEl.classList.add('fx-name-shake', 'fx-name-glow');
+          const textEl = message.querySelector('.text');
+          if (textEl) textEl.classList.add('fx-message-creepy');
+        }
+
+        if (scrambled) {
+          const textEl = message.querySelector('.text');
+          if (textEl) {
+            if (!message.dataset.goblinScrambleText) {
+              message.dataset.goblinScrambleText = getGoblinNonsense();
+            }
+            textEl.textContent = message.dataset.goblinScrambleText;
+            textEl.classList.add('fx-message-shake', 'fx-message-glow');
+          }
+        } else {
+          delete message.dataset.goblinScrambleText;
+        }
+      });
+    }
+
+    function scheduleGoblinRenderRefresh(durationMs) {
+      refreshGoblinRenderedMessages();
+      setTimeout(refreshGoblinRenderedMessages, Number(durationMs || 60000) + 100);
     }
 
     function getGoblinNonsense() {
@@ -1752,6 +1826,7 @@
 
         if (message.effect === 'globalScramble') {
           GOBLIN_EFFECTS.globalScrambleUntil = nowMs() + duration;
+          scheduleGoblinRenderRefresh(duration);
         }
       }
     }
@@ -1810,6 +1885,8 @@
 
       const cleanPlatform = normalizePlatform(platform);
       const key = normalizeUsername(username);
+      const originalUsername = username;
+      const originalPlatform = platform || '';
 
       if (isGoblinEffectActive('hiddenUsers', username, platform)) {
         updateStatus("Goblin hid a message");
@@ -1948,6 +2025,11 @@
         </div>
         <div class="${textClasses}">${html || escapeHtml(text)}</div>
       `;
+
+      message.dataset.goblinKey = goblinEffectKey(originalUsername, originalPlatform);
+      message.dataset.goblinUsername = originalUsername;
+      message.dataset.goblinPlatform = originalPlatform;
+      message.dataset.goblinOriginalHtml = message.innerHTML;
 
       chat.appendChild(message);
       messageCount++;
