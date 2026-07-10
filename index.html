@@ -879,6 +879,46 @@
     const SHOW_STATUS = false;
     const LOG_RAW_EVENTS = false;
 
+
+    // Goblin bridge is OFF by default so duplicate chat overlays do not all control the goblin.
+    // Use ?goblinBridge=1 on exactly one chat overlay source to forward commands/messages.
+    const URL_PARAMS = new URLSearchParams(window.location.search);
+    const GOBLIN_BRIDGE_ENABLED = URL_PARAMS.get("goblinBridge") === "1";
+    const goblinForwardDedupe = new Map();
+
+    function makeGoblinForwardId(username, platform, message) {
+      return [
+        normalizePlatform(platform),
+        normalizeUsername(username),
+        String(message || "").trim().toLowerCase(),
+        Math.floor(Date.now() / 2500)
+      ].join("|");
+    }
+
+    function shouldForwardGoblinMessage(username, platform, message) {
+      if (!GOBLIN_BRIDGE_ENABLED) return false;
+
+      const key = [
+        normalizePlatform(platform),
+        normalizeUsername(username),
+        String(message || "").trim().toLowerCase()
+      ].join("|");
+
+      const now = Date.now();
+      const last = goblinForwardDedupe.get(key) || 0;
+
+      // Prevent accidental double/triple forwarding from Social Stream echoes or duplicate sources.
+      if (now - last < 2500) return false;
+
+      goblinForwardDedupe.set(key, now);
+
+      for (const [oldKey, oldTime] of goblinForwardDedupe.entries()) {
+        if (now - oldTime > 10000) goblinForwardDedupe.delete(oldKey);
+      }
+
+      return true;
+    }
+
     const chat = document.getElementById("chat");
     const statusEl = document.getElementById("status");
     const youtubeViewersEl = document.getElementById("youtubeViewers");
@@ -1746,11 +1786,19 @@
 
     function forwardMessageToGoblin(parsed) {
       if (!parsed || !parsed.username) return;
+
+      const messageText = parsed.text || stripHtml(parsed.html || '') || '';
+
+      if (!shouldForwardGoblinMessage(parsed.username, parsed.platform || '', messageText)) {
+        return;
+      }
+
       emitGoblinBus({
         type: 'chat_message',
+        id: makeGoblinForwardId(parsed.username, parsed.platform || '', messageText),
         username: parsed.username,
         platform: parsed.platform || '',
-        text: parsed.text || stripHtml(parsed.html || '') || ''
+        text: messageText
       });
     }
 
