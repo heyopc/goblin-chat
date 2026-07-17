@@ -883,9 +883,6 @@
     const SHOW_STATUS = false;
     const LOG_RAW_EVENTS = false;
 
-
-    // Goblin bridge is OFF by default so duplicate chat overlays do not all control the goblin.
-    // Use ?goblinBridge=1 on exactly one chat overlay source to forward commands/messages.
     const URL_PARAMS = new URLSearchParams(window.location.search);
     const GOBLIN_BRIDGE_ENABLED = URL_PARAMS.get("goblinBridge") === "1";
     const goblinForwardDedupe = new Map();
@@ -911,7 +908,6 @@
       const now = Date.now();
       const last = goblinForwardDedupe.get(key) || 0;
 
-      // Prevent accidental double/triple forwarding from Social Stream echoes or duplicate sources.
       if (now - last < 2500) return false;
 
       goblinForwardDedupe.set(key, now);
